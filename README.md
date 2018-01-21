@@ -71,7 +71,19 @@ This implies two things:
 
 For the moment have a look at a sample of this idea at [FOTA-test](https://github.com/HomeACcessoryKid/FOTAtest/releases)
 
-## Improvements
+## Memory layout
+I am designing this with 1MByte = 8Mbit flash in mind.  
+Many actual devices that can be bought nowadays have 1MB.  
+The original way to think about OTA is that the user-code AND the OTA code would be together in one image, occupying < 496kB.
+Like this they could swap between the two of them. And if you get away with an user-app that is that small that it all fits, that is great.  
+However, in real life this does not work. SSL based downloading is very bulky in both RAM and Flash.  
+The proposed scheme means that we can have two boot-slots and we need the system param area.
+HOWEVER, they do not need to be at the 512kB boundary.
+IF (very likely, but to be confirmed) the flash size of the OTA image is 400kB or less, then there is like 600kB left for the user code.
+AND the user code does not have to be inflated by the SSL code of the OTA.  
+Another advantage is that the user code will always run from slot0 so the esp-open-rtos Make system doesn't have to be changed for user code.
+
+# Improvements
 I will use the [issues section](https://github.com/HomeACcessoryKid/ota/issues) for all to feed back your ideas. I have one issue myself already...
 
 # License

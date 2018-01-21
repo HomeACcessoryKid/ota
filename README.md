@@ -44,7 +44,7 @@ Using the available public key, the validity is verified
 ```
 server valid?
 ```
-If in the previous steps the server is marked invalid, we return to the main app in boot slot 0 and we report by syslog to a server (to be determinded) so we learn that github has changed its certificate CA provider and can issue a new certificate sector.
+If in the previous steps the server is marked invalid, we return to the main app in boot slot 0 and we report by syslog to a server (to be determinded) so we learn that github has changed its certificate CA provider and HomeACessoryKid can issue a new certificate sector.
 
 ```
 new OTA version?
@@ -52,15 +52,27 @@ self-updater(0) update OTAapp➔1
 checksum OK?
 ```
 Now that the downloading from GitHub has been secured, we can trust whatever we download based on a checksum.
-We verify if there is an update of this OTA repo by itself? If so, we use a self-updater (part of this repo) to 'self update'. After this we have the latest OTA code.
+We verify if there is an update of this OTA repo itself? If so, we use a self-updater (part of this repo) to 'self update'. After this we have the latest OTA code.
 
 ```
 OTA app(1) updates Main app➔0
 checksum OK?
 ```
-Using the baseURL info and the version as stored in sector1, the latest binary is found and downloaded. If the checksum does not work out, we return to the OTA considering we cannot run the old code anymore.
-But normally we boot the new code and the mission is done
+Using the baseURL info and the version as stored in sector1, the latest binary is found and downloaded if needed. If the checksum does not work out, we return to the OTA app start point considering we cannot run the old code anymore.
+But normally we boot the new code and the mission is done.
+
 Note that switching from boot=slot1 to boot=slot0 does not require a reflash
+
+# Providing the images
+The intention is that the image that needs to be flashed will be available in a GitHub offical release using Travis.
+This implies two things:
+- there is an actual version number to work with and an unique entry-point 'latest'
+- Github and Travis take care that the process is 100% documented so full code review can take place at all times to keep everyone honest
+
+For the moment have a look at a sample of this idea at [FOTA-test](https://github.com/HomeACcessoryKid/FOTAtest/releases)
+
+# Improvements
+I will use the [issues section](https://github.com/HomeACcessoryKid/ota/issues) for all to feed back your ideas. I have one issue myself already...
 
 # License
 

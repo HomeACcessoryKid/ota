@@ -1,12 +1,12 @@
 # OTA
 Universal OverTheAir firmware update system for esp-open-rtos based GitHub repositories
 
-# Design
+## Design
 This is a repository in the making. It starts with a good design so I started with the flowchart.
 
 ![](https://github.com/HomeACcessoryKid/ota/blob/master/design-v1.png)
 
-## Cornerstones
+### Concepts
 ```
 boot=slot1
 baseURL=repo
@@ -63,7 +63,7 @@ But normally we boot the new code and the mission is done.
 
 Note that switching from boot=slot1 to boot=slot0 does not require a reflash
 
-# Providing the images
+## Providing the images
 The intention is that the image that needs to be flashed will be available in a GitHub offical release using Travis.
 This implies two things:
 - there is an actual version number to work with and an unique entry-point 'latest'
@@ -71,7 +71,7 @@ This implies two things:
 
 For the moment have a look at a sample of this idea at [FOTA-test](https://github.com/HomeACcessoryKid/FOTAtest/releases)
 
-# Improvements
+## Improvements
 I will use the [issues section](https://github.com/HomeACcessoryKid/ota/issues) for all to feed back your ideas. I have one issue myself already...
 
 # License

@@ -8,6 +8,12 @@ This is a repository in the making. It starts with a good design so I started wi
 
 ### Concepts
 ```
+Main app(0)
+v.x
+```
+The usercode Main app is running in bootslot 0 at version x
+
+```
 boot=slot1
 baseURL=repo
 version=x

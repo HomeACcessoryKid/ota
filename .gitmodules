@@ -1,0 +1,6 @@
+[submodule "components/esp-wifi-config"]
+	path = components/esp-wifi-config
+	url = https://github.com/HomeACcessoryKid/esp-wifi-config.git
+[submodule "components/esp-wolfssl"]
+	path = components/esp-wolfssl
+	url = https://github.com/HomeACcessoryKid/esp-wolfssl.git

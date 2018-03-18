@@ -25,11 +25,12 @@ ecc_key pubecckey;
 
 WOLFSSL_CTX* ctx;
 
+#ifdef DEBUG_WOLFSSL    
 void MyLoggingCallback(const int logLevel, const char* const logMessage) {
-/*custom logging function*/
+    /*custom logging function*/
     printf("loglevel: %d - %s\n",logLevel, logMessage);
 }
-
+#endif
 
 void  ota_init() {
     printf("--- ota_init\n");

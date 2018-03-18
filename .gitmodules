@@ -1,3 +1,7 @@
 [submodule "components/esp-wolfssl"]
 	path = components/esp-wolfssl
 	url = https://github.com/HomeACcessoryKid/esp-wolfssl.git
+[submodule "components/esp-wifi-config"]
+	path = components/esp-wifi-config
+	url = https://github.com/HomeACcessoryKid/esp-wifi-config.git
+	branch = ota-parameters

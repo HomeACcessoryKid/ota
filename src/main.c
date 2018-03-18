@@ -162,7 +162,6 @@ void ota_task(void *arg) {
     }
     ota_reboot(); //boot0, either the user program or the otaboot app
     vTaskDelete(NULL); //just for completeness sake, would never get till here
-vTaskDelete(NULL); //testing
 }
 
 void on_wifi_ready() {
@@ -174,9 +173,6 @@ void user_init(void) {
 //    uart_set_baud(0, 74880);
     uart_set_baud(0, 115200);
 
-    sysparam_set_string("ota_repo", "HomeACcessoryKid/ota-demo");
-    sysparam_set_string("ota_version", "0.0.0");
-    sysparam_set_string("ota_file", "main.bin");
-    wifi_config_init("OTA", NULL, on_wifi_ready); //need to expand it with setting repo-details
+    wifi_config_init("OTA", NULL, on_wifi_ready); //expanded it with setting repo-details
     printf("user-init-done\n");
 }

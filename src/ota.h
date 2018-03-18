@@ -87,4 +87,6 @@ void  ota_temp_boot(void);
 
 void  ota_reboot(void);
 
+void  ota_kill_boot0(void);
+
 #endif // __OTA_H__

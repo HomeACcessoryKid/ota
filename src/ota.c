@@ -46,9 +46,9 @@ void  ota_init() {
     //time support
     time_t ts;
     char *servers[] = {SNTP_SERVERS};
-	sntp_set_update_delay(24*60*60000); //SNTP will request an update each 24 hour
 	const struct timezone tz = {1*60, 0}; //Set GMT+1 zone, daylight savings off
 	sntp_initialize(&tz);
+	sntp_set_update_delay(24*60*60000); //SNTP will request an update every 24 hour
 	sntp_set_servers(servers, sizeof(servers) / sizeof(char*)); //Servers must be configured right after initialization
     do {
         ts = time(NULL);

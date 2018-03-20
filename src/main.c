@@ -64,7 +64,7 @@ void ota_task(void *arg) {
             
             //do we still have a valid internet connexion? dns resolve github... should not be private IP
             
-            ota_set_validate(0); //should work even without certificates
+            ota_set_verify(0); //should work even without certificates
             if ( ota_version) free( ota_version);
             if ( new_version) free( new_version);
             ota_version=ota_get_version(OTAREPO);
@@ -102,7 +102,7 @@ void ota_task(void *arg) {
                 ota_swap_cert_sector();
                 ota_get_pubkey(active_cert_sector);
             } //certificates are good now
-            ota_set_validate(1); //reject faked server
+            ota_set_verify(1); //reject faked server
             if (ota_get_hash(OTAREPO, ota_version, CERTFILE, &signature)) { //testdownload, if server is fake will trigger
                 //report by syslog?  //trouble, so abort
                 break; //leads to boot=0

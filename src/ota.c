@@ -18,7 +18,7 @@
 #include <sysparam.h>
 #include <rboot-api.h>
 
-static int  validate;
+static int  verify;
 
 ecc_key prvecckey;
 ecc_key pubecckey;
@@ -44,16 +44,12 @@ void  ota_init() {
     }
     
     //time support
-    time_t ts;
     char *servers[] = {SNTP_SERVERS};
-	const struct timezone tz = {1*60, 0}; //Set GMT+1 zone, daylight savings off
-	sntp_initialize(&tz);
 	sntp_set_update_delay(24*60*60000); //SNTP will request an update every 24 hour
+	//const struct timezone tz = {1*60, 0}; //Set GMT+1 zone, daylight savings off
+	//sntp_initialize(&tz);
+	sntp_initialize(NULL);
 	sntp_set_servers(servers, sizeof(servers) / sizeof(char*)); //Servers must be configured right after initialization
-    do {
-        ts = time(NULL);
-    } while (ts<1000000000);
-    printf("TIME: %s", ctime(&ts));
 
 #ifdef DEBUG_WOLFSSL    
     if (wolfSSL_SetLoggingCb(MyLoggingCallback)) printf("error setting debug callback\n");
@@ -97,7 +93,7 @@ void  ota_init() {
         backup_cert_sector=0;
     }
     printf("active_sector: 0x%x\n",active_cert_sector);
-    ota_set_validate(0);
+    ota_set_verify(0);
 }
 
 int ota_get_privkey() {
@@ -314,7 +310,7 @@ static int ota_connect(char* host, int port, int *socket, WOLFSSL** ssl) {
     wolfSSL_set_fd(*ssl, *socket);
     printf("set_fd done. ");
 
-    if (validate) ret=wolfSSL_check_domain_name(*ssl, host);
+    if (verify) ret=wolfSSL_check_domain_name(*ssl, host);
 //wolfSSL_Debugging_OFF();
 
     printf("SSL to %s port %d....", host, port);
@@ -352,14 +348,14 @@ int   ota_load_user_app(char * *repo, char * *version, char * *file) {
     return 0;
 }
 
-void  ota_set_validate(int onoff) {
-    printf("--- ota_set_validate...");
+void  ota_set_verify(int onoff) {
+    printf("--- ota_set_verify...");
     int ret=0;
     byte abyte[1];
     
     if (onoff) {
         printf("ON\n");
-        validate=1;
+        verify=1;
         do {
             if (!spiflash_read(active_cert_sector+PKEYSIZE+(ret++), (byte *)abyte, 1)) {
                 printf("error reading flash\n");
@@ -375,10 +371,19 @@ void  ota_set_validate(int onoff) {
             printf("fail cert loading, return %d\n", ret);
         }
         free(certs);
+        
+        time_t ts;
+        do {
+            ts = time(NULL);
+            if (ts == ((time_t)-1)) printf("ts=-1, ");
+            vTaskDelay(1);
+        } while (!(ts>1073741823)); //2^30-1 which is supposed to be like 2004
+        printf("TIME: %s", ctime(&ts)); //we need to have the clock right to check certificates
+        
         wolfSSL_CTX_set_verify(ctx, SSL_VERIFY_PEER, NULL);
     } else {
         printf("OFF\n");
-        validate=0;
+        verify=0;
         wolfSSL_CTX_set_verify(ctx, SSL_VERIFY_NONE, NULL);
     }
 }

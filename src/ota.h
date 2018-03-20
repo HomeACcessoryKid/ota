@@ -62,7 +62,7 @@ int   ota_compare(char* newv, char* oldv);
 
 int   ota_load_user_app(char * *repo, char * *version, char * *file);
 
-void  ota_set_validate(int onoff);
+void  ota_set_verify(int onoff);
 
 char* ota_get_version(char * repo);
 

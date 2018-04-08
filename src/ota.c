@@ -350,36 +350,40 @@ void  ota_set_verify(int onoff) {
     
     if (onoff) {
         printf("ON\n");
-        verify=1;
-        do {
-            if (!spiflash_read(active_cert_sector+PKEYSIZE+(ret++), (byte *)abyte, 1)) {
-                printf("error reading flash\n");
-                break;
-            }
-        } while (abyte[0]!=0xff); ret--;
-        printf("certs size: %d\n",ret);
-        byte *certs=malloc(ret);
-        spiflash_read(active_cert_sector+PKEYSIZE, (byte *)certs, ret);
+        if (verify==0) {
+            verify= 1;
+            do {
+                if (!spiflash_read(active_cert_sector+PKEYSIZE+(ret++), (byte *)abyte, 1)) {
+                    printf("error reading flash\n");
+                    break;
+                }
+            } while (abyte[0]!=0xff); ret--;
+            printf("certs size: %d\n",ret);
+            byte *certs=malloc(ret);
+            spiflash_read(active_cert_sector+PKEYSIZE, (byte *)certs, ret);
 
-        ret=wolfSSL_CTX_load_verify_buffer(ctx, certs, ret, SSL_FILETYPE_PEM);
-        if ( ret != SSL_SUCCESS) {
-            printf("fail cert loading, return %d\n", ret);
+            ret=wolfSSL_CTX_load_verify_buffer(ctx, certs, ret, SSL_FILETYPE_PEM);
+            if ( ret != SSL_SUCCESS) {
+                printf("fail cert loading, return %d\n", ret);
+            }
+            free(certs);
+            
+            time_t ts;
+            do {
+                ts = time(NULL);
+                if (ts == ((time_t)-1)) printf("ts=-1, ");
+                vTaskDelay(1);
+            } while (!(ts>1073741823)); //2^30-1 which is supposed to be like 2004
+            printf("TIME: %s", ctime(&ts)); //we need to have the clock right to check certificates
+            
+            wolfSSL_CTX_set_verify(ctx, SSL_VERIFY_PEER, NULL);
         }
-        free(certs);
-        
-        time_t ts;
-        do {
-            ts = time(NULL);
-            if (ts == ((time_t)-1)) printf("ts=-1, ");
-            vTaskDelay(1);
-        } while (!(ts>1073741823)); //2^30-1 which is supposed to be like 2004
-        printf("TIME: %s", ctime(&ts)); //we need to have the clock right to check certificates
-        
-        wolfSSL_CTX_set_verify(ctx, SSL_VERIFY_PEER, NULL);
     } else {
         printf("OFF\n");
-        verify=0;
-        wolfSSL_CTX_set_verify(ctx, SSL_VERIFY_NONE, NULL);
+        if (verify==1) {
+            verify= 0;
+            wolfSSL_CTX_set_verify(ctx, SSL_VERIFY_NONE, NULL);
+        }
     }
 }
 

@@ -18,7 +18,7 @@
 #include <sysparam.h>
 #include <rboot-api.h>
 
-static int  verify;
+static int  verify = 1;
 static byte file_first_byte[1];
 ecc_key prvecckey;
 ecc_key pubecckey;

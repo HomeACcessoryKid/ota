@@ -41,7 +41,8 @@ void ota_task(void *arg) {
         backup_cert_sector=LOWERCERTSECTOR;
         ota_version=ota_get_version(OTAREPO);
         ota_get_file(OTAREPO,ota_version,CERTFILE,active_cert_sector);
-        ota_activate_sector(active_cert_sector);
+        ota_finalize_file(active_cert_sector);
+        ota_activate_sector(active_cert_sector); //can be phased out now that we have ota_finalize_file
     }
     printf("active_cert_sector: 0x%05x\n",active_cert_sector);
     file_size=ota_get_pubkey(active_cert_sector);
@@ -81,6 +82,7 @@ void ota_task(void *arg) {
                 if (ota_verify_hash(backup_cert_sector,&signature)) { //hash and file do not match
                     break; //leads to boot=0
                 }
+                ota_finalize_file(backup_cert_sector); //can be contained in ota_swap_cert_sector
                 if (ota_verify_signature(&signature)) { //maybe an update on the public key
                     keyid=1;
                     while (sprintf(keyname,KEYNAME,keyid) , ota_get_hash(OTAREPO, ota_version, keyname, &signature)) {
@@ -113,6 +115,7 @@ void ota_task(void *arg) {
                     if (have_private_key) {
                         file_size=ota_get_file(OTAREPO,ota_version,BOOTFILE,BOOT1SECTOR);
                         if (file_size<=0) continue; //try again later
+                        ota_finalize_file(BOOT1SECTOR);
                         ota_sign(BOOT1SECTOR,file_size, &signature, BOOTFILE); //reports to console
                         vTaskDelete(NULL); //upload the signature out of band to github and start again
                     }
@@ -122,6 +125,7 @@ void ota_task(void *arg) {
                     if (have_private_key) {
                         file_size=ota_get_file(OTAREPO,ota_version,MAINFILE,BOOT1SECTOR);
                         if (file_size<=0) continue; //try again later
+                        ota_finalize_file(BOOT1SECTOR);
                         ota_sign(BOOT1SECTOR,file_size, &signature, MAINFILE); //reports to console
                         vTaskDelete(NULL); //upload the signature out of band to github and start again
                     } else {
@@ -132,6 +136,7 @@ void ota_task(void *arg) {
                         file_size=ota_get_file(OTAREPO,ota_version,MAINFILE,BOOT1SECTOR);
                         if (file_size<=0) continue; //try again later
                         if (ota_verify_hash(BOOT1SECTOR,&signature)) continue; //download failed
+                        ota_finalize_file(BOOT1SECTOR);
                     }
                 } //now file is here for sure and matches hash
                 if (ota_verify_signature(&signature)) vTaskDelete(NULL); //this should never happen
@@ -145,15 +150,15 @@ void ota_task(void *arg) {
                     if (file_size<=0) continue; //something went wrong, but now boot0 is broken so start over
                     if (ota_verify_signature(&signature)) continue; //this should never happen
                     if (ota_verify_hash(BOOT0SECTOR,&signature)) continue; //download failed
+                    ota_finalize_file(BOOT0SECTOR);
                     break; //leads to boot=0 and starts self-updating/otaboot-app
                 } //ota code is up to date
                 new_version=ota_get_version(user_repo);
                 if (ota_compare(new_version,user_version)) { //can both upgrade and downgrade
                     ota_get_hash(user_repo, new_version, user_file, &signature);
                     file_size=ota_get_file(user_repo,new_version,user_file,BOOT0SECTOR);
-                    if (file_size<=0 || ota_verify_hash(BOOT0SECTOR,&signature)) { //something went wrong, but now boot0 is broken so start over
-                        ota_kill_boot0(); continue; //make sure the bootloader does not consider it a valid bootimage
-                    }
+                    if (file_size<=0 || ota_verify_hash(BOOT0SECTOR,&signature)) continue; //something went wrong, but now boot0 is broken so start over
+                    ota_finalize_file(BOOT0SECTOR);
                 } //nothing to update
                 ota_write_status(new_version); //we have been successful, hurray!
                 break; //leads to boot=0 and starts updated user app

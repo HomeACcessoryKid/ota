@@ -68,6 +68,8 @@ char* ota_get_version(char * repo);
 
 int   ota_get_file(char * repo, char * version, char * file, int sector); //number of bytes 
 
+void  ota_finalize_file(int sector);
+
 int   ota_get_newkey(char * repo, char * version, char * file, signature_t* signature);
 
 int   ota_get_hash(char * repo, char * version, char * file, signature_t* signature);
@@ -87,7 +89,5 @@ int   ota_boot(void);
 void  ota_temp_boot(void);
 
 void  ota_reboot(void);
-
-void  ota_kill_boot0(void);
 
 #endif // __OTA_H__

@@ -19,7 +19,7 @@
 #include <rboot-api.h>
 
 static int  verify;
-
+static byte file_first_byte[1];
 ecc_key prvecckey;
 ecc_key pubecckey;
 
@@ -169,7 +169,7 @@ int ota_verify_pubkey(void) { //check if public and private key are a pair
     return answer-1;
 }
 
-void ota_hash(int start_sector, int filesize, byte * hash) {
+void ota_hash(int start_sector, int filesize, byte * hash, byte first_byte) {
     printf("--- ota_hash\n");
     
     int bytes;
@@ -183,12 +183,14 @@ void ota_hash(int start_sector, int filesize, byte * hash) {
         if (!spiflash_read(start_sector+bytes, (byte *)buffer, 1024)) {
             printf("error reading flash\n");   break;
         }
+        if (!bytes && first_byte!=0xff) buffer[0]=first_byte;
         wc_Sha384Update(&sha, buffer, 1024);
     }
     //printf("%d\n",bytes);
     if (!spiflash_read(start_sector+bytes, (byte *)buffer, filesize-bytes)) {
         printf("error reading flash\n");
     }
+    if (!bytes && first_byte!=0xff) buffer[0]=first_byte;
     //printf("filesize %d\n",filesize);
     wc_Sha384Update(&sha, buffer, filesize-bytes);
     wc_Sha384Final(&sha, hash);
@@ -200,7 +202,7 @@ void ota_sign(int start_sector, int filesize, signature_t* signature, char* file
     unsigned int i,siglen=SIGNSIZE;
     WC_RNG rng;
 
-    ota_hash(start_sector, filesize, signature->hash);
+    ota_hash(start_sector, filesize, signature->hash, 0xff); // 0xff=no special first byte action
     wc_ecc_sign_hash(signature->hash, HASHSIZE, signature->sign, &siglen, &rng, &prvecckey);
     printf("echo "); for (i=0;i<HASHSIZE;i++) printf("%02x ",signature->hash[i]); printf("> x.hex\n");
     printf("echo %08x >>x.hex\n",filesize);
@@ -590,7 +592,12 @@ int   ota_get_file_ex(char * repo, char * version, char * file, int sector, byte
                                 if (!spiflash_erase_sector(sector+collected)) return -6; //erase error
                                 writespace+=SECTORSIZE;
                             }
-                            if (!spiflash_write(sector+collected, (byte *)recv_buf, ret)) return -7; //write error
+                            if (collected) {
+                                if (!spiflash_write(sector+collected, (byte *)recv_buf,   ret  )) return -7; //write error
+                            } else { //at the very beginning, do not write the first byte yet but store it for later
+                                file_first_byte[0]=(byte)recv_buf[0];
+                                if (!spiflash_write(sector+1        , (byte *)recv_buf+1, ret-1)) return -7; //write error
+                            }
                             writespace-=ret;
                         } else { //buffer
                             if (ret>bufsz) return -8; //too big
@@ -635,6 +642,12 @@ int   ota_get_file_ex(char * repo, char * version, char * file, int sector, byte
     free(host2);
     free(getlinestart);
     return collected;
+}
+
+void  ota_finalize_file(int sector) {
+    printf("--- ota_finalize_file\n");
+
+    spiflash_write(sector, file_first_byte, 1);
 }
 
 int   ota_get_file(char * repo, char * version, char * file, int sector) { //number of bytes
@@ -683,11 +696,13 @@ int   ota_verify_hash(int address, signature_t* signature) {
     printf("--- ota_verify_hash\n");
     
     byte hash[HASHSIZE];
-    ota_hash(address, signature->size, hash);
+    ota_hash(address, signature->size, hash, file_first_byte[0]);
 //     int i;
 //     printf("signhash:"); for (i=0;i<HASHSIZE;i++) printf(" %02x",signature->hash[i]); printf("\n");
 //     printf("calchash:"); for (i=0;i<HASHSIZE;i++) printf(" %02x",           hash[i]); printf("\n");
-        
+    
+    if (memcmp(hash,signature->hash,HASHSIZE)) ota_hash(address, signature->size, hash, 0xff);
+    
     return memcmp(hash,signature->hash,HASHSIZE);
 }
 
@@ -750,11 +765,4 @@ void  ota_reboot(void) {
     printf("--- ota_reboot\n");
 
     sdk_system_restart();
-}
-
-void  ota_kill_boot0(void) {
-    printf("--- ota_kill_boot0\n");
-
-    byte abyte[1];
-    abyte[0]=0x00; spiflash_write(BOOT0SECTOR, abyte, 1);
 }

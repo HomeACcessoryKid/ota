@@ -71,26 +71,19 @@ void  ota_init() {
     byte fourbyte[4];
     active_cert_sector=HIGHERCERTSECTOR;
     backup_cert_sector=LOWERCERTSECTOR;
-    if (!spiflash_read(active_cert_sector-1, (byte *)fourbyte, 4)) { //get last byte of backup + first 3 active
+    if (!spiflash_read(active_cert_sector, (byte *)fourbyte, 4)) { //get first 4 active
         printf("error reading flash\n");
     } // if OTHER  vvvvvv sector active
-    if (fourbyte[0]==0xf0 || fourbyte[1]!=0x30 || fourbyte[2]!=0x76 || fourbyte[3]!=0x30 ) {
+    if (fourbyte[0]!=0x30 || fourbyte[1]!=0x76 || fourbyte[2]!=0x30 ) {
         active_cert_sector=LOWERCERTSECTOR;
         backup_cert_sector=HIGHERCERTSECTOR;
         if (!spiflash_read(active_cert_sector, (byte *)fourbyte, 4)) {
             printf("error reading flash\n");
         }
-        if (                 fourbyte[0]!=0x30 || fourbyte[1]!=0x76 || fourbyte[2]!=0x30 ) {
+        if (fourbyte[0]!=0x30 || fourbyte[1]!=0x76 || fourbyte[2]!=0x30 ) {
             active_cert_sector=0;
             backup_cert_sector=0;
         }
-    }
-    if (!spiflash_read(active_cert_sector-1+SECTORSIZE, (byte *)fourbyte, 1)) { //get last byte of active
-        printf("error reading flash\n");
-    }
-    if (fourbyte[0]!=0xf0 ) { //must be activated
-        active_cert_sector=0;
-        backup_cert_sector=0;
     }
     printf("active_sector: 0x%x\n",active_cert_sector);
     ota_set_verify(0);
@@ -647,7 +640,7 @@ int   ota_get_file_ex(char * repo, char * version, char * file, int sector, byte
 void  ota_finalize_file(int sector) {
     printf("--- ota_finalize_file\n");
 
-    spiflash_write(sector, file_first_byte, 1);
+    if (!spiflash_write(sector, file_first_byte, 1)) printf("error writing flash\n");
 }
 
 int   ota_get_file(char * repo, char * version, char * file, int sector) { //number of bytes
@@ -717,13 +710,18 @@ int   ota_verify_signature(signature_t* signature) {
     return answer-1;
 }
 
+void  ota_kill_file(int sector) {
+    printf("--- ota_kill_file\n");
+
+    byte zero[]={0x00};
+    if (!spiflash_write(sector, zero, 1)) printf("error writing flash\n");
+}
+
 void  ota_swap_cert_sector() {
     printf("--- ota_swap_cert_sector\n");
     
-    byte abyte[1];
-    
-    abyte[0]=0x00; if (!spiflash_write(active_cert_sector+SECTORSIZE-1, abyte, 1)) printf("error writing flash\n");
-    abyte[0]=0xf0; if (!spiflash_write(backup_cert_sector+SECTORSIZE-1, abyte, 1)) printf("error writing flash\n");
+    ota_kill_file(active_cert_sector);
+    ota_finalize_file(backup_cert_sector);
     if (active_cert_sector==HIGHERCERTSECTOR) {
         active_cert_sector=LOWERCERTSECTOR;
         backup_cert_sector=HIGHERCERTSECTOR;
@@ -731,13 +729,6 @@ void  ota_swap_cert_sector() {
         active_cert_sector=HIGHERCERTSECTOR;
         backup_cert_sector=LOWERCERTSECTOR;
     }
-}
-
-void  ota_activate_sector(int sector) {
-    printf("--- ota_activate_sector\n");
-    byte abyte[1];
-    
-    abyte[0]=0xf0; if (!spiflash_write(sector+SECTORSIZE-1, abyte, 1)) printf("error writing flash\n");
 }
 
 void  ota_write_status(char * version) {

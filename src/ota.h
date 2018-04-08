@@ -80,8 +80,6 @@ int   ota_verify_signature(signature_t* signature);
 
 void  ota_swap_cert_sector();
 
-void  ota_activate_sector(int sector);
-
 void  ota_write_status(char * version);
 
 int   ota_boot(void);

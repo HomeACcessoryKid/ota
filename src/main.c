@@ -42,7 +42,6 @@ void ota_task(void *arg) {
         ota_version=ota_get_version(OTAREPO);
         ota_get_file(OTAREPO,ota_version,CERTFILE,active_cert_sector);
         ota_finalize_file(active_cert_sector);
-        ota_activate_sector(active_cert_sector); //can be phased out now that we have ota_finalize_file
     }
     printf("active_cert_sector: 0x%05x\n",active_cert_sector);
     file_size=ota_get_pubkey(active_cert_sector);
@@ -71,7 +70,7 @@ void ota_task(void *arg) {
             ota_version=ota_get_version(OTAREPO);
             if (ota_get_hash(OTAREPO, ota_version, CERTFILE, &signature)) { //no certs.sector.sig exists yet on server
                 if (have_private_key) {
-                    ota_sign(active_cert_sector,SECTORSIZE-1, &signature, CERTFILE); //reports to console
+                    ota_sign(active_cert_sector,SECTORSIZE, &signature, CERTFILE); //reports to console
                     vTaskDelete(NULL); //upload the signature out of band to github and start again
                 } else {
                     continue; //loop and try again later
@@ -82,7 +81,6 @@ void ota_task(void *arg) {
                 if (ota_verify_hash(backup_cert_sector,&signature)) { //hash and file do not match
                     break; //leads to boot=0
                 }
-                ota_finalize_file(backup_cert_sector); //can be contained in ota_swap_cert_sector
                 if (ota_verify_signature(&signature)) { //maybe an update on the public key
                     keyid=1;
                     while (sprintf(keyname,KEYNAME,keyid) , ota_get_hash(OTAREPO, ota_version, keyname, &signature)) {

@@ -52,6 +52,7 @@ void ota_task(void *arg) {
         if (ota_verify_pubkey()) ota_sign(active_cert_sector,file_size, &signature, "pub-1.key");//use this (old) privkey to sign the (new) pubkey
     }
 
+    if (ota_boot()) ota_write_status("0.0.0");  //we will have to get user code from scratch if running ota_boot
     if ( !ota_load_user_app(&user_repo, &user_version, &user_file)) { //repo/version/file must be configured
         //new_version=ota_get_version(user_repo); //consider that if here version is equal, we end it already
         //if (!ota_compare(new_version,user_version)) { //allows a denial of update so not doing it for now
@@ -145,7 +146,6 @@ void ota_task(void *arg) {
                 if (ota_compare(ota_version,OTAVERSION)>0) { //set OTAVERSION when running make and match with github
                     ota_get_hash(OTAREPO, ota_version, BOOTFILE, &signature);
                     file_size=ota_get_file(OTAREPO,ota_version,BOOTFILE,BOOT0SECTOR);
-                    ota_write_status("0.0.0");  //we will have to get user code from scratch after this
                     if (file_size<=0) continue; //something went wrong, but now boot0 is broken so start over
                     if (ota_verify_signature(&signature)) continue; //this should never happen
                     if (ota_verify_hash(BOOT0SECTOR,&signature)) continue; //download failed

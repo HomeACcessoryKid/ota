@@ -1,4 +1,4 @@
-/*
+/*  (c) 2018 HomeAccessoryKid
  * OTA dual app
  * use local.mk to turn it into the OTA otamain.bin app or the otaboot.bin app
  */

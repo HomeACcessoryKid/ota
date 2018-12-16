@@ -1,6 +1,8 @@
 # OTA
 Universal OverTheAir firmware update system for esp-open-rtos based GitHub repositories
 
+You will want to read the page on [LCM](https://github.com/HomeACcessoryKid/life-cycle-manager)
+
 ## Design
 This is a repository in the making. It starts with a good design so I started with the flowchart.
 

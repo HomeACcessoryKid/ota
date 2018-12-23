@@ -33,7 +33,7 @@ void ota_task(void *arg) {
     char keyname[KEYNAMELEN];
     
     if (ota_boot()) printf("OTABOOT "); else printf("OTAMAIN ");
-    printf("VERSION: %s, compiled %s %s\n",OTAVERSION, __DATE__, __TIME__);
+    printf("VERSION: %s\n",OTAVERSION); //makes binary not reproducible for hash comparison
 
     ota_init();
     

@@ -1,6 +1,7 @@
 /*  (c) 2018 HomeAccessoryKid
  * OTA dual app
  * use local.mk to turn it into the OTA otamain.bin app or the otaboot.bin app
+ * this is the last version since it will switch to life-cycle-manager
  */
 
 #include <stdlib.h>  //for printf and free

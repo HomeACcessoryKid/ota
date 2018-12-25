@@ -675,7 +675,7 @@ int   ota_get_hash(char * repo, char * version, char * file, signature_t* signat
     printf("--- ota_get_hash\n");
     int ret;
     byte buffer[HASHSIZE+4+SIGNSIZE];
-    char * signame=malloc(strlen(file));
+    char * signame=malloc(strlen(file)+5);
     strcpy(signame,file);
     strcat(signame,".sig");
     memset(signature->hash,0,HASHSIZE);

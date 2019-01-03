@@ -33,6 +33,35 @@ void MyLoggingCallback(const int logLevel, const char* const logMessage) {
 }
 #endif
 
+void  ota_new_layout() { //changing 0xF7000 x 4 sectors to 0xF7000 x 2 sectors
+    printf("--- ota_new_layout");
+    //In the case that a device is already using a lot of sysparam space and that after compacting
+    //it still doesn't fit in 4KB then I see no elegant way to save this device from data-loss, so don't ask...
+    int i;
+    uint8_t buffer[56];
+    
+    //read 0xF9000 and check if it is active or stale
+    spiflash_read(0xF9000, buffer, 8);
+    if (buffer[0]!=0x45 || buffer[1]!=0x4f || buffer[2]!=0x52 || buffer[3]!=0x70 || buffer[4]!=0x02) ota_reboot(); //trouble
+
+    if (buffer[5] & 0x40) { //F9 is active
+        //read 0xF9FF8 and check it doesn't contain 8x 0xff so it is worth to compact
+        spiflash_read(0xF9FF8, buffer, 8);
+        if ( !( buffer[0]==0xff && buffer[1]==0xff && buffer[2]==0xff && buffer[3]==0xff &&
+                buffer[4]==0xff && buffer[5]==0xff && buffer[6]==0xff && buffer[7]==0xff )) {
+                                    printf(" F9:%d",sysparam_compact()); sysparam_compact();
+        }
+    } else printf(" F8:%d",sysparam_compact()); //F8 is compacted to F9
+    //now content is in sector F9 and active and compacted if needed
+    printf(" create:%d",sysparam_create_area(0xF7000,2,true)); //takes care of the headers of 8 bytes
+    //copy F9008 till F9FFF to F7008;
+    for (i=8;i<0x1000;i+=56) {
+        spiflash_read( 0xF9000+i,buffer,56);
+        spiflash_write(0xF7000+i,buffer,56);
+    }
+    printf(" init:%d\n",sysparam_init(0xF7000,0));
+}
+
 void  ota_init() {
     printf("--- ota_init\n");
     

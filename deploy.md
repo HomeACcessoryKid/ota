@@ -7,16 +7,16 @@ cd ota/src
 ```
 #initial steps to be expanded
 
-mkdir ../certificates/0.0.5v
-cp ../certificates/certs.sector ../certificates/0.0.5v
+mkdir ../certificates/0.2.3v
+cp ../certificates/certs.sector ../certificates/0.2.3v
 #set local.mk to the ota-main program
-make -j4 rebuild OTAVERSION=0.0.5
-mv firmware/otamain.bin ../certificates/0.0.5v
+make -j6 rebuild OTAVERSION=0.2.3
+mv firmware/otamain.bin ../certificates/0.2.3v
 #set local.mk back to ota-boot program
-make -j4 rebuild OTAVERSION=0.0.5
-cp firmware/otaboot.bin ../certificates/0.0.5v
-#commit this as version 0.0.5
-#set up a new github release 0.0.5 as a pre-release using the just commited master...
+make -j6 rebuild OTAVERSION=0.2.3
+cp firmware/otaboot.bin ../certificates/0.2.3v
+#commit this as version 0.2.3
+#set up a new github release 0.2.3 as a pre-release using the just commited master...
 
 #erase the flash and uplaod the privatekey
 ```

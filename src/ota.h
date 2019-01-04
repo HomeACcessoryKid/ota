@@ -15,7 +15,7 @@
 
 #define SECTORSIZE 4096
 #define HIGHERCERTSECTOR 0xF6000
-#define LOWERCERTSECTOR 0xF5000
+#define LOWERCERTSECTOR 0xFA000 //LCM HIGHERCERTSECTOR
 #define BOOT0SECTOR 0x02000
 #define BOOT1SECTOR 0x8D000 //must match the program1.ld value!!
 #define HOST "github.com"
@@ -49,6 +49,8 @@ typedef struct {
 
 int active_cert_sector;
 int backup_cert_sector;
+
+void  ota_new_layout();
 
 void  ota_init();
 

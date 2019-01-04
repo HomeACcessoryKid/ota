@@ -7,24 +7,27 @@ cd ota/src
 ```
 #initial steps to be expanded
 
-mkdir ../certificates/0.0.5v
-cp ../certificates/certs.sector ../certificates/0.0.5v
+mkdir ../certificates/0.2.4v
+cp ../certificates/certs.sector* ../certificates/0.2.4v
 #set local.mk to the ota-main program
-make -j4 rebuild OTAVERSION=0.0.5
-mv firmware/otamain.bin ../certificates/0.0.5v
+make -j6 rebuild OTAVERSION=0.2.4
+mv firmware/otamain.bin ../certificates/0.2.4v
 #set local.mk back to ota-boot program
-make -j4 rebuild OTAVERSION=0.0.5
-cp firmware/otaboot.bin ../certificates/0.0.5v
-#commit this as version 0.0.5
-#set up a new github release 0.0.5 as a pre-release using the just commited master...
+make -j6 rebuild OTAVERSION=0.2.4
+cp firmware/otaboot.bin ../certificates/0.2.4v
+#commit this as version 0.2.4
+#set up a new github release 0.2.4 as a pre-release using the just commited master...
 
-#erase the flash and uplaod the privatekey
+#erase the flash and upload the ota-boot program to the device that contains the private key
 ```
 esptool.py -p /dev/cu.usbserial-* --baud 230400 erase_flash 
-esptool.py -p /dev/cu.usbserial-* --baud 230400 write_flash 0xf5000 privatekey.der
+make flash OTAVERSION=0.2.4
 ```
-#upload the ota-boot program to the device that contains the private key
-make flash
+#run the code to change the sysparam area already
+#upload the privatekey
+```
+esptool.py -p /dev/cu.usbserial-* --baud 230400 write_flash 0xfa000 privatekey.der
+```
 #power cycle to prevent the bug for software reset after flash
 #create the 3 signature files next to the bin file and upload to github one by one
 #verify the hashes on the computer

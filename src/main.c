@@ -149,6 +149,7 @@ void ota_task(void *arg) {
                 ota_get_file(LCMREPO,lcm_version,CERTFILE,backup_cert_sector);
                 ota_get_pubkey(backup_cert_sector);
                 if (ota_verify_signature(&signature)) continue; //this should never happen
+                ota_finalize_file(backup_cert_sector);
                 ota_temp_boot(); //launches the ota software in bootsector 1
             } else {  //running ota-main software now
                 printf("--- running ota-main software\n");

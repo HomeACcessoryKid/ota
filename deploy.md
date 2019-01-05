@@ -36,5 +36,5 @@ xxd ../certificates/otamain.bin.sig
 #make the release a production release on github
 #remove the private key
 ```
-esptool.py -p /dev/cu.usbserial-* --baud 230400 write_flash 0xf5000 ../certificates/blank.bin
+esptool.py -p /dev/cu.usbserial-* --baud 230400 write_flash 0xfa000 ../certificates/blank.bin
 ```
